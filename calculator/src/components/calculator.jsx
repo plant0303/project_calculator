@@ -79,7 +79,8 @@ class Calculator extends Component {
     this.state = {
       result: 0,
       prevCal: '',
-      calculatorHistory: []
+      calculatorHistory: [],
+      message: ''
     };
     this.calculatorLogic = new CalculatorLogic();
   }
@@ -88,53 +89,66 @@ class Calculator extends Component {
     const value = e.target.innerText;
     this.calculatorLogic.inputValue(value);
     this.setState({ result: this.calculatorLogic.getResult(), message: this.calculatorLogic.message });
-  }
+  };
 
   handleResult = () => {
     try {
       const result = this.calculatorLogic.calculate();
-      const calculatedResult = this.calculatorLogic.calculate();
       const prevCal = this.calculatorLogic.getResult();
 
-      const newRecord = `${prevCal} = ${calculatedResult}`;
+      // 계산식과 결과를 객체 형태로 저장
+      const newRecord = { calculation: prevCal, result: result };
+
       this.setState({
-        result,
-        prevCal: this.state.result,
-        calculatorHistory: [...this.state.calculatorHistory, newRecord]
+        result: result,
+        prevCal: prevCal,
+        calculatorHistory: [...this.state.calculatorHistory, newRecord], // 계산 기록에 객체 추가
+        message: '' // 계산 후 메시지 초기화
       });
+
+      // Reset the calculator's logic for a new calculation
+      this.calculatorLogic.result = '';
     } catch (error) {
-      this.setState({ message: "계산식 오류" });
+      this.setState({ message: error.message }); // 오류 메시지 출력
     }
-  }
+  };
 
-
+  handleHistoryClick = (record) => {
+    // 기록을 클릭했을 때 해당 계산식을 result에 설정
+    this.setState({ result: record.result,  prevCal: record.calculation });
+  };
 
   render() {
-    const { result, prevCal, message, calculatorHistory } = this.state;
+    const { result, prevCal, calculatorHistory, message } = this.state;
 
     return (
-      <div className='wrap'>
+      <div className="wrap">
         <div className="calculator">
-          <h1><a href="/">계산기</a></h1>
+          <h1>
+            <a href="/">계산기</a>
+          </h1>
           <div className="resultWrap">
-            <div className='message'>{this.state.message}</div>
+            <div className="message">{message}</div> {/* 오류 메시지 출력 */}
             <div className="prevCalcul">{prevCal}</div>
-            <input className='result' type="text" name="result" value={result} readOnly />
+            <input className="result" type="text" name="result" value={result} readOnly />
           </div>
           <div className="buttons">
             <div className="number">
-              {[1, 2, 3, "←",
-                4, 5, 6, "+",
-                7, 8, 9, "-",
-                "C", "0", "/", "*"
-              ].map((num) => (
-                <button key={num} onClick={this.onButtonClick}>{num}</button>
+              {[1, 2, 3, '←', 4, 5, 6, '+', 7, 8, 9, '-', 'C', '0', '/', '*'].map((num) => (
+                <button key={num} onClick={this.onButtonClick}>
+                  {num}
+                </button>
               ))}
             </div>
-            <button className='equal' onClick={this.handleResult}>=</button>
+            <button className="equal" onClick={this.handleResult}>
+              =
+            </button>
           </div>
         </div>
-        <Result calculatorHistory={calculatorHistory} />
+        <Result
+          calculatorHistory={calculatorHistory} // 계산 기록 전달
+          onHistoryClick={this.handleHistoryClick} // 클릭 시 처리 함수 전달
+        />
       </div>
     );
   }
